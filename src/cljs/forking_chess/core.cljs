@@ -28,8 +28,12 @@
 (def rows
   (vec (for [row (range 1 9)
         :let [columns (seq "abcdefgh")
-              squares (vec (map #(assoc {} :row row :column % :value (initial-placement % row)) columns))]]
-         {:squares squares})))
+              squares (vec (map #(assoc {:row row
+                                         :value (initial-placement % row)
+                                         :id (guid)}
+                                        :column %)
+                                columns))]]
+         {:squares squares :id (guid)})))
 
 (def icons
   {["white" :K] \♔
@@ -58,17 +62,16 @@
 (defn chess-board [{:keys [rows]}]
   (om/component
     (dom/table #js {:className "chess-board"}
-               (om/build-all row rows))))
+               (om/build-all row rows {:key :id}))))
 
 (defn row [{:keys [squares]}]
   (om/component
     (dom/tr nil
-            (om/build-all square squares))))
+            (om/build-all square squares {:key :id}))))
 
 (defn square [{:keys [row column value]}]
   (om/component
     (dom/td nil
             (dom/a nil (icons value)))))
-
 
 (om/root app-state chess-game (.getElementById js/document "content"))
