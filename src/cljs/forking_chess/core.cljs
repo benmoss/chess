@@ -10,13 +10,41 @@
 
 (enable-console-print!)
 
-(declare chess-board squares row square)
+(declare chess-board row square)
+
+(def initial-placements
+  (merge (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 8))
+                 (map #(conj (list %) "black") [:R :N :B :K :Q :B :N :R]))
+         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 7))
+                 (repeat '("black" :P)))
+         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 2))
+                 (repeat '("white" :P)))
+         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 1))
+                 (map #(conj (list %) "white") [:R :N :B :K :Q :B :N :R]))))
+
+(defn initial-placement [column row]
+  (initial-placements (keyword (str column row))))
 
 (def rows
   (vec (for [row (range 1 9)
         :let [columns (seq "abcdefgh")
-              squares (vec (map #(assoc {} :row row :column %) columns))]]
+              squares (vec (map #(assoc {} :row row :column % :value (initial-placement % row)) columns))]]
          {:squares squares})))
+
+(def icons
+  {["white" :K] \♔
+   ["white" :Q] \♕
+   ["white" :R] \♖
+   ["white" :B] \♗
+   ["white" :N] \♘
+   ["white" :P] \♙
+   ["black" :K] \♚
+   ["black" :Q] \♛
+   ["black" :R] \♜
+   ["black" :B] \♝
+   ["black" :N] \♞
+   ["black" :P] \♟})
+
 
 (def app-state (atom {:rows rows}))
 
@@ -37,10 +65,10 @@
     (dom/tr nil
             (om/build-all square squares))))
 
-(defn square [{:keys [row column]}]
+(defn square [{:keys [row column value]}]
   (om/component
-    (dom/td #js {:id (str row column)}
-            (dom/a nil (str row column)))))
+    (dom/td nil
+            (dom/a nil (icons value)))))
 
 
 (om/root app-state chess-game (.getElementById js/document "content"))
