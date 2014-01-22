@@ -52,26 +52,53 @@
 
 (def app-state (atom {:rows rows}))
 
+(defn select-square [app {:keys [id]}]
+  (println app))
+
+(defn handle-event [type app val]
+  (case type
+    :select (select-square app val)))
+
 (defn chess-game [app owner]
   (reify
-    om/IRender
-    (render [_]
+    om/IWillMount
+    (will-mount [_]
+      (let [comm (chan)]
+        (om/set-state! owner :comm comm)
+        (go (while true
+              (let [[type value] (<! comm)]
+                (om/read value #(handle-event type app %)))))))
+    om/IRenderState
+    (render-state [_ {:keys [editing comm] :as state}]
       (dom/div nil
-               (om/build chess-board app)))))
+               (om/build chess-board app
+                         {:init-state {:comm comm}})))))
 
 (defn chess-board [{:keys [rows]}]
-  (om/component
-    (dom/table #js {:className "chess-board"}
-               (om/build-all row rows {:key :id}))))
+  (reify
+    om/IRenderState
+    (render-state [_ {:keys [comm] :as state}]
+      (dom/table #js {:className "chess-board"}
+                 (om/build-all row rows {:key :id
+                                         :init-state {:comm comm}})))))
 
 (defn row [{:keys [squares]}]
-  (om/component
-    (dom/tr nil
-            (om/build-all square squares {:key :id}))))
+  (reify
+    om/IRenderState
+    (render-state [_ {:keys [comm] :as state}]
+      (dom/tr nil
+              (om/build-all square squares {:key :id
+                                            :init-state {:comm comm}})))))
 
-(defn square [{:keys [row column value]}]
-  (om/component
-    (dom/td nil
-            (dom/a nil (icons value)))))
+(defn click [e {:keys [value] :as square} owner comm]
+  (when value
+    (put! comm [:select square])))
+
+(defn square [{:keys [row column value] :as square} owner]
+  (reify
+    om/IRenderState
+    (render-state [_ {:keys [comm]}]
+      (dom/td #js {:onClick (om/bind click square owner comm)}
+              (dom/a nil (icons value))))))
 
 (om/root app-state chess-game (.getElementById js/document "content"))
