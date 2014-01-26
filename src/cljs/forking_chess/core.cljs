@@ -5,7 +5,8 @@
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [cljs-http.client :as http]
-            [forking-chess.utils :refer [guid]]))
+            [forking-chess.utils :refer [guid]]
+            [clojure.string :as string]))
 
 
 (enable-console-print!)
@@ -52,12 +53,19 @@
    ["black" :P] \♟})
 
 
-(defn select-square [app {:keys [id]}]
-  (println app))
+(defn select-square [app square]
+  (if-let [selected (:selected @app)]
+    (do (println "moving!" @selected "to" @square)
+        (om/update! app dissoc :selected)
+        (om/update! square assoc :value (:value @selected))
+        (om/update! selected dissoc :state :value))
+    (do (println "selecting!" @square)
+        (om/update! square assoc :state "selected")
+        (om/update! app assoc :selected square))))
 
-(defn handle-event [type app val]
+(defn handle-event [type app square]
   (case type
-    :select (select-square app val)))
+    :select (select-square app square)))
 
 (defn chess-game [app owner]
   (reify
@@ -66,8 +74,8 @@
       (let [comm (chan)]
         (om/set-state! owner :comm comm)
         (go (while true
-              (let [[type value] (<! comm)]
-                (om/read value #(handle-event type app %)))))))
+              (let [[type square] (<! comm)]
+                (handle-event type app square))))))
     om/IRenderState
     (render-state [_ {:keys [editing comm] :as state}]
       (let [rows (partition 8 (vals (:squares app)))
@@ -78,15 +86,15 @@
                              (om/build-all square % options))
                     rows))))))
 
-(defn click [e {:keys [value] :as square} owner comm]
-  (when value
-    (put! comm [:select square])))
+(defn click [e square owner comm]
+  (put! comm [:select square]))
 
-(defn square [{:keys [position value] :as square} owner]
+(defn square [{:keys [position value state] :as square} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [comm]}]
-      (dom/td #js {:onClick (om/bind click square owner comm) :className position}
+      (dom/td #js {:onClick #(click % square owner comm)
+                   :className (string/join " " [position state])}
               (dom/a nil (icons value))))))
 
 (om/root app-state chess-game (.getElementById js/document "content"))
