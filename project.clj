@@ -16,7 +16,7 @@
                  [compojure "1.1.6"]
                  [cheshire "5.2.0"]
                  [cljs-http "0.1.3"]
-                 [om "0.2.3"]]
+                 [om "0.3.0"]]
 
   :plugins [[lein-cljsbuild "1.0.1"]
             [lein-ring "0.8.7"]

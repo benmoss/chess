@@ -12,28 +12,30 @@
 
 (declare chess-board row square)
 
+(def base-row [:R :N :B :K :Q :B :N :R])
+
 (def initial-placements
   (merge (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 8))
-                 (map #(conj (list %) "black") [:R :N :B :K :Q :B :N :R]))
+                 (partition 2 (interleave (repeat "black") base-row)))
          (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 7))
                  (repeat '("black" :P)))
          (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 2))
                  (repeat '("white" :P)))
          (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 1))
-                 (map #(conj (list %) "white") [:R :N :B :K :Q :B :N :R]))))
+                 (partition 2 (interleave (repeat "white") base-row)))))
 
 (defn initial-placement [column row]
   (initial-placements (keyword (str column row))))
 
-(def rows
-  (vec (for [row (range 1 9)
-        :let [columns (seq "abcdefgh")
-              squares (vec (map #(assoc {:row row
-                                         :value (initial-placement % row)
-                                         :id (guid)}
-                                        :column %)
-                                columns))]]
-         {:squares squares :id (guid)})))
+(def squares
+  (into (sorted-map-by #(compare (reverse (str %2)) (reverse (str %))))
+        (for [row (range 1 9)
+              column (seq "abcdefgh")
+              :let [position (keyword (str column row))
+                    value (initial-placement column row)]]
+          [position {:value value :position position}])))
+
+(def app-state (atom {:squares squares}))
 
 (def icons
   {["white" :K] \♔
@@ -49,8 +51,6 @@
    ["black" :N] \♞
    ["black" :P] \♟})
 
-
-(def app-state (atom {:rows rows}))
 
 (defn select-square [app {:keys [id]}]
   (println app))
@@ -70,35 +70,23 @@
                 (om/read value #(handle-event type app %)))))))
     om/IRenderState
     (render-state [_ {:keys [editing comm] :as state}]
-      (dom/div nil
-               (om/build chess-board app
-                         {:init-state {:comm comm}})))))
-
-(defn chess-board [{:keys [rows]}]
-  (reify
-    om/IRenderState
-    (render-state [_ {:keys [comm] :as state}]
-      (dom/table #js {:className "chess-board"}
-                 (om/build-all row rows {:key :id
-                                         :init-state {:comm comm}})))))
-
-(defn row [{:keys [squares]}]
-  (reify
-    om/IRenderState
-    (render-state [_ {:keys [comm] :as state}]
-      (dom/tr nil
-              (om/build-all square squares {:key :id
-                                            :init-state {:comm comm}})))))
+      (let [rows (partition 8 (vals (:squares app)))
+            options {:key :position
+                     :init-state {:comm comm}}]
+        (apply dom/table #js {:className "chess-board"}
+               (map #(dom/tr #js {:key (:position (first %))}
+                             (om/build-all square % options))
+                    rows))))))
 
 (defn click [e {:keys [value] :as square} owner comm]
   (when value
     (put! comm [:select square])))
 
-(defn square [{:keys [row column value] :as square} owner]
+(defn square [{:keys [position value] :as square} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [comm]}]
-      (dom/td #js {:onClick (om/bind click square owner comm)}
+      (dom/td #js {:onClick (om/bind click square owner comm) :className position}
               (dom/a nil (icons value))))))
 
 (om/root app-state chess-game (.getElementById js/document "content"))
