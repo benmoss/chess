@@ -6,52 +6,12 @@
             [om.dom :as dom :include-macros true]
             [cljs-http.client :as http]
             [forking-chess.utils :refer [guid]]
-            [clojure.string :as string]))
-
+            [clojure.string :as str]
+            [forking-chess.crossovers.board :as board]))
 
 (enable-console-print!)
 
-(declare chess-board row square)
-
-(def base-row [:R :N :B :K :Q :B :N :R])
-
-(def initial-placements
-  (merge (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 8))
-                 (partition 2 (interleave (repeat "black") base-row)))
-         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 7))
-                 (repeat '("black" :P)))
-         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 2))
-                 (repeat '("white" :P)))
-         (zipmap (map #(keyword (str % %2)) (seq "abcdefgh") (repeat 1))
-                 (partition 2 (interleave (repeat "white") base-row)))))
-
-(defn initial-placement [column row]
-  (initial-placements (keyword (str column row))))
-
-(def squares
-  (into (sorted-map-by #(compare (reverse (str %2)) (reverse (str %))))
-        (for [row (range 1 9)
-              column (seq "abcdefgh")
-              :let [position (keyword (str column row))
-                    value (initial-placement column row)]]
-          [position {:value value :position position}])))
-
-(def app-state (atom {:squares squares}))
-
-(def icons
-  {["white" :K] \♔
-   ["white" :Q] \♕
-   ["white" :R] \♖
-   ["white" :B] \♗
-   ["white" :N] \♘
-   ["white" :P] \♙
-   ["black" :K] \♚
-   ["black" :Q] \♛
-   ["black" :R] \♜
-   ["black" :B] \♝
-   ["black" :N] \♞
-   ["black" :P] \♟})
-
+(def app-state (atom {:squares board/squares}))
 
 (defn select-square [app square]
   (if-let [selected (:selected @app)]
@@ -66,6 +26,17 @@
 (defn handle-event [type app square]
   (case type
     :select (select-square app square)))
+
+(defn click [e square owner comm]
+  (put! comm [:select square]))
+
+(defn square [{:keys [position value state] :as square} owner]
+  (reify
+    om/IRenderState
+    (render-state [_ {:keys [comm]}]
+      (dom/td #js {:onClick #(click % square owner comm)
+                   :className (str/join " " [position state])}
+              (dom/a nil (board/icons value))))))
 
 (defn chess-game [app owner]
   (reify
@@ -85,16 +56,5 @@
                (map #(dom/tr #js {:key (:position (first %))}
                              (om/build-all square % options))
                     rows))))))
-
-(defn click [e square owner comm]
-  (put! comm [:select square]))
-
-(defn square [{:keys [position value state] :as square} owner]
-  (reify
-    om/IRenderState
-    (render-state [_ {:keys [comm]}]
-      (dom/td #js {:onClick #(click % square owner comm)
-                   :className (string/join " " [position state])}
-              (dom/a nil (icons value))))))
 
 (om/root app-state chess-game (.getElementById js/document "content"))

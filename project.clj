@@ -28,6 +28,7 @@
          :init    forking-chess.core/init}
 
   :cljsbuild {
+              :crossovers [forking-chess.crossovers]
               :builds [{:id "dev"
                         :source-paths ["src/cljs"]
                         :compiler {
