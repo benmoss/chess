@@ -37,3 +37,7 @@ a {
 td.selected a {
   color: green;
 }
+
+td.selectable {
+  outline: 2px solid red;
+}

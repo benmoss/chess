@@ -5,21 +5,24 @@
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [clojure.string :as str]
-            [forking-chess.crossovers.board :as board]))
+            [forking-chess.crossovers.board :as b]
+            [forking-chess.piece :as p]))
 
 (enable-console-print!)
 
-(def app-state (atom {:squares board/squares}))
+(def app-state (atom {:squares b/squares}))
 
 (defn move-piece [{:keys [from to app]}]
   (let [value (:value @from)]
-    (om/update! app dissoc :selected)
+    (om/update! app dissoc :selected :selectables)
     (om/update! from dissoc :state :value)
     (om/update! to assoc :value value)))
 
 (defn select-piece [{:keys [piece app]}]
   (om/update! piece assoc :state "selected")
-  (om/update! app assoc :selected piece))
+  (om/update! app assoc :selected piece)
+  (println (p/available-moves @piece))
+  (om/update! app assoc :selectables (set (p/available-moves @piece))))
 
 (defn select-square [app square]
   (if-let [selected (:selected @app)]
@@ -33,13 +36,13 @@
 (defn click [e square owner comm]
   (put! comm [:select square]))
 
-(defn square [{:keys [position value state] :as square} owner]
+(defn square [{:keys [position value state selectable] :as square} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [comm]}]
       (dom/td #js {:onClick #(click % square owner comm)
-                   :className (str/join " " [position state])}
-              (dom/a nil (board/icons value))))))
+                   :className (apply str (interpose " " [position state selectable]))}
+              (dom/a nil (b/icons (-> value vals set)))))))
 
 (defn chess-game [app owner]
   (reify
@@ -51,10 +54,17 @@
               (let [[type square] (<! comm)]
                 (handle-event type app square))))))
     om/IRenderState
-    (render-state [_ {:keys [editing comm] :as state}]
+    (render-state [_ {:keys [selectable comm] :as state}]
       (let [rows (partition 8 (vals (:squares app)))
             options {:key :position
-                     :init-state {:comm comm}}]
+                     :init-state {:comm comm}
+                     :fn (fn [square]
+                           (if-let [selectables (:selectables app)]
+                             (cond-> square
+                               ((:selectables app) (:position square))
+                               (assoc :selectable "selectable"))
+                             square))
+                     }]
         (apply dom/table #js {:className "chess-board"}
                (map #(dom/tr #js {:key (:position (first %))}
                              (om/build-all square % options))
