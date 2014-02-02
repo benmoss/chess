@@ -4,8 +4,6 @@
             [cljs.core.async :refer [put! <! >! chan timeout]]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [cljs-http.client :as http]
-            [forking-chess.utils :refer [guid]]
             [clojure.string :as str]
             [forking-chess.crossovers.board :as board]))
 
