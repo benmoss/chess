@@ -13,15 +13,20 @@
 
 (def app-state (atom {:squares board/squares}))
 
+(defn move-piece [{:keys [from to app]}]
+  (let [value (:value @from)]
+    (om/update! app dissoc :selected)
+    (om/update! from dissoc :state :value)
+    (om/update! to assoc :value value)))
+
+(defn select-piece [{:keys [piece app]}]
+  (om/update! piece assoc :state "selected")
+  (om/update! app assoc :selected piece))
+
 (defn select-square [app square]
   (if-let [selected (:selected @app)]
-    (do (println "moving!" @selected "to" @square)
-        (om/update! app dissoc :selected)
-        (om/update! square assoc :value (:value @selected))
-        (om/update! selected dissoc :state :value))
-    (do (println "selecting!" @square)
-        (om/update! square assoc :state "selected")
-        (om/update! app assoc :selected square))))
+    (move-piece {:from selected :to square :app app})
+    (select-piece {:piece square :app app})))
 
 (defn handle-event [type app square]
   (case type
