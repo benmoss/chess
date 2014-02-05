@@ -21,14 +21,13 @@
 
   :plugins [[lein-cljsbuild "1.0.1"]
             [lein-ring "0.8.7"]
-            [lein-pdo "0.1.1"]]
+            [lein-pdo "0.1.1"]
+            [com.cemerick/austin "0.1.3"]]
 
   :aliases {"dev" ["pdo" "cljsbuild" "auto" "dev," "ring" "server-headless"]}
 
   :ring {:handler forking-chess.core/app
          :init    forking-chess.core/init}
-
-  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   :cljsbuild {
               :crossovers [forking-chess.crossovers]
