@@ -23,6 +23,7 @@ a {
   text-align:center;
   vertical-align:middle;
   width:80px;
+  cursor: default;
 }
 .chess-board tr:nth-child(odd) td:nth-child(even),
 .chess-board tr:nth-child(even) td:nth-child(odd) {
