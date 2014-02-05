@@ -11,6 +11,7 @@
 (defn position-to-coords [position]
   {:x (-> position first column-to-int)
    :y (-> position last str js/parseInt dec)})
+
 (defn coords-to-position [{:keys [x y]}]
   (str (int-to-column x)
        (inc y)))

@@ -13,15 +13,16 @@
 (def app-state (atom {:squares b/squares}))
 
 (defn move-piece [{:keys [from to app]}]
-  (let [value (:value @from)]
-    (om/update! app dissoc :selected :selectables)
-    (om/update! from dissoc :state :value)
-    (om/update! to assoc :value value)))
+  (let [value (:value @from)
+        selectables (:selectables @app)]
+    (when (selectables (:position @to))
+      (om/update! app dissoc :selected :selectables)
+      (om/update! from dissoc :state :value)
+      (om/update! to assoc :value value))))
 
 (defn select-piece [{:keys [piece app]}]
   (om/update! piece assoc :state "selected")
   (om/update! app assoc :selected piece)
-  (println (p/available-moves @piece))
   (om/update! app assoc :selectables (set (p/available-moves @piece))))
 
 (defn select-square [app square]
@@ -63,8 +64,7 @@
                              (cond-> square
                                ((:selectables app) (:position square))
                                (assoc :selectable "selectable"))
-                             square))
-                     }]
+                             square))}]
         (apply dom/table #js {:className "chess-board"}
                (map #(dom/tr #js {:key (:position (first %))}
                              (om/build-all square % options))
