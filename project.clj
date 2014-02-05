@@ -7,7 +7,7 @@
 
   :min-lein-version "2.3.4"
 
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj", "src/cljs"]
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2138"]
@@ -16,7 +16,8 @@
                  [compojure "1.1.6"]
                  [cheshire "5.2.0"]
                  [cljs-http "0.1.3"]
-                 [om "0.3.0"]]
+                 [om "0.3.0"]
+                 [com.cemerick/piggieback "0.1.2"]]
 
   :plugins [[lein-cljsbuild "1.0.1"]
             [lein-ring "0.8.7"]
@@ -26,6 +27,8 @@
 
   :ring {:handler forking-chess.core/app
          :init    forking-chess.core/init}
+
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   :cljsbuild {
               :crossovers [forking-chess.crossovers]
