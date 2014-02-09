@@ -20,15 +20,21 @@
       (om/update! from dissoc :state :value)
       (om/update! to assoc :value value))))
 
-(defn select-piece [{:keys [piece app]}]
-  (om/update! piece assoc :state "selected")
-  (om/update! app assoc :selected piece)
-  (om/update! app assoc :selectables (set (p/available-moves @piece))))
+(defn highlight-square [{:keys [square app]}]
+  (om/update! square assoc :state "selected")
+  (om/update! app assoc :selected square)
+  (om/update! app assoc :selectables (set (p/available-moves @square))))
+
+(defn unhighlight-square [{:keys [square app]}]
+  (om/update! square dissoc :state)
+  (om/update! app dissoc :selected :selectables))
 
 (defn select-square [app square]
   (if-let [selected (:selected @app)]
-    (move-piece {:from selected :to square :app app})
-    (select-piece {:piece square :app app})))
+    (if (= @square @selected)
+      (unhighlight-square {:square square :app app})
+      (move-piece {:from selected :to square :app app}))
+    (highlight-square {:square square :app app})))
 
 (defn handle-event [type app square]
   (case type
@@ -57,14 +63,12 @@
     om/IRenderState
     (render-state [_ {:keys [selectable comm] :as state}]
       (let [rows (partition 8 (vals (:squares app)))
+            init (fn [{:keys [position] :as square}]
+                   (cond-> square
+                     (get (:selectables app) position) (assoc :selectable "selectable")))
             options {:key :position
                      :init-state {:comm comm}
-                     :fn (fn [square]
-                           (if-let [selectables (:selectables app)]
-                             (cond-> square
-                               ((:selectables app) (:position square))
-                               (assoc :selectable "selectable"))
-                             square))}]
+                     :fn init}]
         (apply dom/table #js {:className "chess-board"}
                (map #(dom/tr #js {:key (:position (first %))}
                              (om/build-all square % options))

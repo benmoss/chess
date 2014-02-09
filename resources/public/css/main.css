@@ -7,11 +7,19 @@ a {
   text-decoration:none;
   text-shadow:0 1px #fff;
   width:80px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
+
 .chess-board {
   border:5px solid #333;
   border-spacing: 0;
 }
+
 .chess-board td {
   background:#fff;
   background:-moz-linear-gradient(top, #fff, #eee);

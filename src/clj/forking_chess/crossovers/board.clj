@@ -4,7 +4,8 @@
 (def base-row [:R :N :B :K :Q :B :N :R])
 
 (def initial-placements
-  (merge (zipmap (map str (seq "abcdefgh") (repeat 8))
+  (merge (zipmap (map str (seq "abcdefgh")
+                          (repeat 8))
                  (map (partial hash-map :color "black" :type) base-row))
          (zipmap (map str (seq "abcdefgh") (repeat 7))
                  (repeat {:color "black" :type :P}))
