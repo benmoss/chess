@@ -37,19 +37,22 @@
       (move-piece {:from selected :to square :app app}))
     (highlight-square {:square square :app app})))
 
-(defn click [e square owner comm]
-  (put! comm [:select square]))
-
 (defn square [{:keys [position value state selectable] :as square} owner]
   (reify
     om/IRenderState
-    (render-state [_ {:keys [comm]}]
-      (dom/td #js {:onClick #(put! comm square)
+    (render-state [_ {:keys [select-chan]}]
+      (dom/td #js {:onClick #(put! select-chan square)
                    :className (apply str (interpose " " [position state selectable]))}
               (dom/a nil (b/icons (-> value vals set)))))))
 
-(defn build-squares [square-values options]
-  (let [rows (partition 8 square-values)]
+(defn build-squares [app select-chan]
+  (let [rows (partition 8 (-> app :squares vals))
+        init (fn [{:keys [position] :as square}]
+               (cond-> square
+                 (get (:selectables app) position) (assoc :selectable "selectable")))
+        options {:key :position
+                 :init-state {:select-chan select-chan}
+                 :fn init}]
     (apply dom/table #js {:className "chess-board"}
            (map #(dom/tr #js {:key (:position (first %))}
                          (om/build-all square % options))
@@ -72,14 +75,8 @@
                   (rewind app)))))))
     om/IRenderState
     (render-state [_ {:keys [selectable select rewind] :as state}]
-      (let [init (fn [{:keys [position] :as square}]
-                   (cond-> square
-                     (get (:selectables app) position) (assoc :selectable "selectable")))
-            options {:key :position
-                     :init-state {:comm select}
-                     :fn init}]
-        (dom/div nil
-                 (build-squares (-> app :squares vals) options)
-                 (dom/button #js {:onClick #(put! rewind )} "Rewind"))))))
+      (dom/div nil
+               (build-squares app select)
+               (dom/button #js {:onClick #(put! rewind)} "Rewind")))))
 
 (om/root app-state chess-board (.getElementById js/document "content"))
