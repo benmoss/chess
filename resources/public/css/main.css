@@ -47,6 +47,6 @@ td.selected a {
   color: green;
 }
 
-td.selectable {
+td.targetable {
   outline: 2px solid red;
 }

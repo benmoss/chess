@@ -10,46 +10,43 @@
 
 (enable-console-print!)
 
-(def app-state (atom {:squares b/squares :moves []}))
+(def app-state (atom {:squares b/squares}))
+(def history (atom []))
 
 (defn move-piece [{:keys [from to app]}]
-  (let [value (:value @from)
-        selectables (:selectables @app)]
-    (when (selectables (:position @to))
-      (om/update! app dissoc :selected :selectables)
-      (om/update! from dissoc :state :value)
-      (om/update! to assoc :value value)
-      (om/transact! app :moves #(conj % [(:position @from) (:position @to)])))))
-
-(defn highlight-square [{:keys [square app]}]
-  (om/update! square assoc :state "selected")
-  (om/update! app assoc :selected square)
-  (om/update! app assoc :selectables (set (p/available-moves @square))))
-
-(defn unhighlight-square [{:keys [square app]}]
-  (om/update! square dissoc :state)
-  (om/update! app dissoc :selected :selectables))
+  (let [value (:value @from)]
+    (when ((p/available-targets @from) (:position @to))
+      (swap! history conj @app-state)
+      (om/update! app dissoc :selected)
+      (om/update! from dissoc :value)
+      (om/update! to assoc :value value))))
 
 (defn select-square [app square]
   (if-let [selected (:selected @app)]
     (if (= @square @selected)
-      (unhighlight-square {:square square :app app})
+      (om/update! app dissoc :selected)
       (move-piece {:from selected :to square :app app}))
-    (highlight-square {:square square :app app})))
+    (om/update! app assoc :selected square)))
 
-(defn square [{:keys [position value state selectable] :as square} owner]
+(defn square [{:keys [position value selected targetable] :as square} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [select-chan]}]
-      (dom/td #js {:onClick #(put! select-chan square)
-                   :className (apply str (interpose " " [position state selectable]))}
-              (dom/a nil (b/icons (-> value vals set)))))))
+      (let [class-names (cond-> []
+                          targetable (conj "targetable")
+                          selected (conj "selected"))]
+        (dom/td #js {:onClick #(put! select-chan square)
+                     :className  (apply str (interpose " " class-names))}
+                (dom/a nil (b/icons (-> value vals set))))))))
 
 (defn build-squares [app select-chan]
   (let [rows (partition 8 (-> app :squares vals))
+        selected (:selected app)
+        targets (p/available-targets selected)
         init (fn [{:keys [position] :as square}]
                (cond-> square
-                 (get (:selectables app) position) (assoc :selectable "selectable")))
+                 (targets position) (assoc :targetable true)
+                 (= selected square) (assoc :selected true)))
         options {:key :position
                  :init-state {:select-chan select-chan}
                  :fn init}]

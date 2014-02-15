@@ -22,17 +22,19 @@
 (defn piece-to-coords [piece]
   (-> piece :position position-to-coords))
 
-(defmulti available-moves #(get-in % [:value :type]))
+(defmulti available-targets #(get-in % [:value :type]))
 
-(defmethod available-moves :P [pawn]
+(defmethod available-targets :P [pawn]
   (let [{:keys [x y]} (piece-to-coords pawn)]
     (if (= "white" (get-in pawn [:value :color]))
-      (vector (coords-to-position x (inc y)))
-      (vector (coords-to-position x (dec y))))))
+      #{(coords-to-position x (inc y))}
+      #{(coords-to-position x (dec y))})))
+
+(defmethod available-targets :default [_] #{})
 
 ;;;;;;;;;;;;;
 (comment
   (def white {:position "h2" :value {:color "white" :type :P}})
   (def black {:position "a7" :value {:color "black" :type :P}})
-  (available-moves white)
-  (available-moves black))
+  (available-targets white)
+  (available-targets black))
