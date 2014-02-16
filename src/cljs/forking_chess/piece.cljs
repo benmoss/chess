@@ -31,8 +31,13 @@
 (defmethod possible-moves :P [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         color (get-in piece [:value :color])
-        op ({"white" inc "black" dec} color)]
-    (move-set [(coords-to-position x (op y))])))
+        op ({"white" + "black" -} color)
+        default (coords-to-position x (op y 1))
+        initial (coords-to-position x (op y 2))]
+    (if (or (and (= "white" color) (= 1 y))
+            (and (= "black" color) (= 6 y)))
+      (move-set [default initial])
+      (move-set [default]))))
 
 (defmethod possible-moves :K [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
@@ -101,4 +106,4 @@
   (possible-moves {:position "h2" :value {:color "white" :type :N}})
   (possible-moves {:position "a7" :value {:color "black" :type :P}})
   (possible-moves {:position "h2" :value {:color "white" :type :P}})
-  (possible-moves {:position "h1" :value {:color "black" :type :P}}))
+  (possible-moves {:position "h2" :value {:color "black" :type :P}}))
