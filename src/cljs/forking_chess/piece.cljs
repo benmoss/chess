@@ -22,33 +22,42 @@
 (defn piece-to-coords [piece]
   (-> piece :position position-to-coords))
 
+(defn move-set [moves]
+  (into #{}
+        (remove nil? moves)))
+
 (defmulti available-targets #(get-in % [:value :type]))
 
 (defmethod available-targets :P [pawn]
   (let [{:keys [x y]} (piece-to-coords pawn)
         color (get-in pawn [:value :color])
         op ({"white" inc "black" dec} color)]
-    (if-let [move (coords-to-position x (op y))]
-      #{move}
-      #{})))
+    (move-set [(coords-to-position x (op y))])))
+
+(defmethod available-targets :K [king]
+  (let [{:keys [x y]} (piece-to-coords king)
+        ops [inc dec identity]]
+    (move-set (for [op1 ops
+                    op2 ops
+                    :when (not= op1 op2 identity)]
+                (coords-to-position (op1 x) (op2 y))))))
 
 (defmethod available-targets :N [knight]
   (let [{:keys [x y]} (piece-to-coords knight)
         ops [+ -]
         moves [1 2]]
-    (into #{}
-          (remove nil?
-                  (for [op1 ops
-                        op2 ops
-                        xmove moves
-                        ymove moves
-                        :when (not= xmove ymove)]
-                    (coords-to-position (op1 x xmove) (op2 y ymove)))))))
+    (move-set (for [op1 ops
+                    op2 ops
+                    xmove moves
+                    ymove moves
+                    :when (not= xmove ymove)]
+                (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
 (defmethod available-targets :default [_] #{})
 
 ;;;;;;;;;;;;;
 (comment
+  (available-targets {:position "h2" :value {:color "white" :type :K}})
   (available-targets {:position "h2" :value {:color "white" :type :N}})
   (available-targets {:position "a7" :value {:color "black" :type :P}})
   (available-targets {:position "h2" :value {:color "white" :type :P}})
