@@ -26,15 +26,15 @@
   (into #{}
         (remove nil? moves)))
 
-(defmulti available-targets #(get-in % [:value :type]))
+(defmulti possible-moves #(get-in % [:value :type]))
 
-(defmethod available-targets :P [piece]
+(defmethod possible-moves :P [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         color (get-in piece [:value :color])
         op ({"white" inc "black" dec} color)]
     (move-set [(coords-to-position x (op y))])))
 
-(defmethod available-targets :K [piece]
+(defmethod possible-moves :K [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [inc dec identity]]
     (move-set (for [op1 ops
@@ -42,7 +42,7 @@
                     :when (not= op1 op2 identity)]
                 (coords-to-position (op1 x) (op2 y))))))
 
-(defmethod available-targets :Q [piece]
+(defmethod possible-moves :Q [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [+ -]
         moves (range 8)]
@@ -55,7 +55,7 @@
                               (= xmove ymove))]
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
-(defmethod available-targets :R [piece]
+(defmethod possible-moves :R [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [+ -]
         moves (range 8)]
@@ -67,7 +67,7 @@
                     :when (or (= 0 xmove) (= 0 ymove))]
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
-(defmethod available-targets :B [piece]
+(defmethod possible-moves :B [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [+ -]
         moves (range 8)]
@@ -79,7 +79,7 @@
                     :when (= xmove ymove)]
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
-(defmethod available-targets :N [piece]
+(defmethod possible-moves :N [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [+ -]
         moves [1 2]]
@@ -90,15 +90,15 @@
                     :when (not= xmove ymove)]
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
-(defmethod available-targets :default [_] #{})
+(defmethod possible-moves :default [_] #{})
 
 ;;;;;;;;;;;;;
 (comment
-  (available-targets {:position "h2" :value {:color "white" :type :K}})
-  (available-targets {:position "h2" :value {:color "white" :type :Q}})
-  (available-targets {:position "h2" :value {:color "white" :type :R}})
-  (available-targets {:position "h2" :value {:color "white" :type :B}})
-  (available-targets {:position "h2" :value {:color "white" :type :N}})
-  (available-targets {:position "a7" :value {:color "black" :type :P}})
-  (available-targets {:position "h2" :value {:color "white" :type :P}})
-  (available-targets {:position "h1" :value {:color "black" :type :P}}))
+  (possible-moves {:position "h2" :value {:color "white" :type :K}})
+  (possible-moves {:position "h2" :value {:color "white" :type :Q}})
+  (possible-moves {:position "h2" :value {:color "white" :type :R}})
+  (possible-moves {:position "h2" :value {:color "white" :type :B}})
+  (possible-moves {:position "h2" :value {:color "white" :type :N}})
+  (possible-moves {:position "a7" :value {:color "black" :type :P}})
+  (possible-moves {:position "h2" :value {:color "white" :type :P}})
+  (possible-moves {:position "h1" :value {:color "black" :type :P}}))

@@ -15,7 +15,7 @@
 
 (defn move-piece [{:keys [from to app]}]
   (let [value (:value @from)]
-    (when ((p/available-targets @from) (:position @to))
+    (when ((p/possible-moves @from) (:position @to))
       (swap! history conj @app-state)
       (om/update! app dissoc :selected)
       (om/update! from dissoc :value)
@@ -43,7 +43,7 @@
 (defn build-squares [app select-chan]
   (let [rows (partition 8 (-> app :squares vals))
         selected (:selected app)
-        targets (p/available-targets selected)
+        targets (p/possible-moves selected)
         init (fn [{:keys [position] :as square}]
                (cond-> square
                  (targets position) (assoc :targetable true)
