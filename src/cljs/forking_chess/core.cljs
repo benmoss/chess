@@ -11,7 +11,7 @@
 (enable-console-print!)
 
 (def app-state (atom {:squares b/squares}))
-(def history (atom []))
+(def history (atom '()))
 
 (defn move-piece [{:keys [from to app]}]
   (let [value (:value @from)]
@@ -55,6 +55,11 @@
                          (om/build-all square % options))
                 rows))))
 
+(defn rewind! []
+  (when-let [previous (dissoc (peek @history) :selected)]
+    (reset! app-state previous)
+    (swap! history pop)))
+
 (defn chess-board [app owner]
   (reify
     om/IInitState
@@ -74,6 +79,6 @@
     (render-state [_ {:keys [selectable select rewind] :as state}]
       (dom/div nil
                (build-squares app select)
-               (dom/button #js {:onClick #(put! rewind)} "Rewind")))))
+               (dom/button #js {:onClick rewind!} "Rewind")))))
 
 (om/root app-state chess-board (.getElementById js/document "content"))
