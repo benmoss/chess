@@ -26,7 +26,8 @@
     (if (= @square @selected)
       (om/update! app dissoc :selected)
       (move-piece {:from selected :to square :app app}))
-    (om/update! app assoc :selected square)))
+    (when (:value @square)
+      (om/update! app assoc :selected square))))
 
 (defn square [{:keys [position value selected targetable] :as square} owner]
   (reify
