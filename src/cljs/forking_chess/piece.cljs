@@ -30,11 +30,21 @@
       #{(coords-to-position x (inc y))}
       #{(coords-to-position x (dec y))})))
 
+(defmethod available-targets :N [knight]
+  (let [{:keys [x y]} (piece-to-coords knight)]
+    (into #{} (for [op1 [+ -]
+                    op2 [+ -]
+                    xmove [1 2]
+                    ymove [1 2]
+                    :when (not= xmove ymove)]
+                (coords-to-position (op1 x xmove) (op2 y ymove))))))
+
 (defmethod available-targets :default [_] #{})
 
 ;;;;;;;;;;;;;
 (comment
   (def white {:position "h2" :value {:color "white" :type :P}})
   (def black {:position "a7" :value {:color "black" :type :P}})
+  (available-targets {:position "h2" :value {:color "white" :type :N}})
   (available-targets white)
   (available-targets black))
