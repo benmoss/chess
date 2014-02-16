@@ -67,6 +67,18 @@
                     :when (or (= 0 xmove) (= 0 ymove))]
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
+(defmethod available-targets :B [piece]
+  (let [{:keys [x y]} (piece-to-coords piece)
+        ops [+ -]
+        moves (range 8)]
+    (move-set (for [op1 ops
+                    op2 ops
+                    xmove moves
+                    ymove moves
+                    :when (not= xmove ymove 0)
+                    :when (= xmove ymove)]
+                (coords-to-position (op1 x xmove) (op2 y ymove))))))
+
 (defmethod available-targets :N [piece]
   (let [{:keys [x y]} (piece-to-coords piece)
         ops [+ -]
@@ -85,6 +97,7 @@
   (available-targets {:position "h2" :value {:color "white" :type :K}})
   (available-targets {:position "h2" :value {:color "white" :type :Q}})
   (available-targets {:position "h2" :value {:color "white" :type :R}})
+  (available-targets {:position "h2" :value {:color "white" :type :B}})
   (available-targets {:position "h2" :value {:color "white" :type :N}})
   (available-targets {:position "a7" :value {:color "black" :type :P}})
   (available-targets {:position "h2" :value {:color "white" :type :P}})
