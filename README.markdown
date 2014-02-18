@@ -8,10 +8,6 @@ Requires [leiningen](https://github.com/technomancy/leiningen). Run `lein dev` a
 
 ## Todo
 
-* Reimplement the rewind behavior to just store move diffs, 
-  instead of the whole app state. This will make getting the state
-  required for implementing 'en-passant' easier
-
 * Implement en-passant
 
 * Implement "legal moves" as a subset of "possible moves"

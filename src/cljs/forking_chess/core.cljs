@@ -13,21 +13,29 @@
 (def app-state (atom {:squares b/squares}))
 (def history (atom '()))
 
-(defn move-piece [{:keys [from to app]}]
-  (let [value (:value @from)]
-    (when ((p/possible-moves @from) (:position @to))
-      (swap! history conj @app-state)
+(defn move-piece! [from to app]
+  (let [value (:value @from)
+        from-val @from
+        to-val @to]
+    (when ((p/possible-moves from-val) (:position to-val))
+      (swap! history conj {(:position from-val) from-val (:position to-val) to-val})
       (om/update! app dissoc :selected)
       (om/update! from dissoc :value)
       (om/update! to assoc :value value))))
 
-(defn select-square [app square]
-  (if-let [selected (:selected @app)]
-    (if (= @square @selected)
-      (om/update! app dissoc :selected)
-      (move-piece {:from selected :to square :app app}))
-    (when (:value @square)
-      (om/update! app assoc :selected square))))
+(defn update-square! [app square]
+  (let [selected (:selected @app)
+        selecting? (:value @square)
+        unselecting? (and selected (= @square @selected))]
+    (cond
+      unselecting? (om/update! app dissoc :selected)
+      selected (move-piece! selected square app)
+      selecting? (om/update! app assoc :selected square))))
+
+(defn rewind! [app]
+  (when-let [prior-move (peek @history)]
+    (om/transact! app :squares #(merge % prior-move))
+    (swap! history pop)))
 
 (defn square [{:keys [position value selected targetable] :as square} owner]
   (reify
@@ -56,11 +64,6 @@
                          (om/build-all square % options))
                 rows))))
 
-(defn rewind! []
-  (when-let [previous (dissoc (peek @history) :selected)]
-    (reset! app-state previous)
-    (swap! history pop)))
-
 (defn chess-board [app owner]
   (reify
     om/IInitState
@@ -74,12 +77,12 @@
         (go (while true
               (let [[square c] (alts! [select rewind])]
                 (if (= c select)
-                  (select-square app square)
-                  (rewind app)))))))
+                  (update-square! app square)
+                  (rewind! app)))))))
     om/IRenderState
     (render-state [_ {:keys [selectable select rewind] :as state}]
       (dom/div nil
                (build-squares app select)
-               (dom/button #js {:onClick rewind!} "Rewind")))))
+               (dom/button #js {:onClick #(put! rewind :t)} "Rewind")))))
 
 (om/root app-state chess-board (.getElementById js/document "content"))
