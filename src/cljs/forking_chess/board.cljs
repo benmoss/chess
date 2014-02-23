@@ -4,17 +4,17 @@
 
 (enable-console-print!)
 
-(def base-row {"a" :R "b" :N "c" :B "d" :Q "e" :K "f" :B "g" :N "h" :R})
+(def base-column {"a" :R "b" :N "c" :B "d" :Q "e" :K "f" :B "g" :N "h" :R})
 
 (def initial-placements
   (into {}
-        (for [row (map str (seq "abcdefgh"))
-              column [1 2 7 8]
-              :let [color (if (< column 5) "white" "black")
-                    type (if (or (= 1 column)
-                                 (= 8 column))
-                           (base-row row) :P)]]
-          [(str row column) {:color color :type type}])))
+        (for [row [1 2 7 8]
+              column (map str (seq "abcdefgh"))
+              :let [color (if (< row 5) "white" "black")
+                    type (if (or (= 1 row)
+                                 (= 8 row))
+                           (base-column column) :P)]]
+          [(str column row) {:color color :type type}])))
 
 (defn initial-placement [column row]
   (initial-placements (str column row)))
