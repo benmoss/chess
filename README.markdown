@@ -8,8 +8,6 @@ Requires [leiningen](https://github.com/technomancy/leiningen). Run `lein dev` a
 
 ## Todo
 
-* Implement en-passant
-
 * Implement castling
 
 * Implement "legal moves" as a subset of "possible moves"

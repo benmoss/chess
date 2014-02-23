@@ -17,7 +17,8 @@
   (let [value (:value @from)
         from-val @from
         to-val @to]
-    (when ((p/possible-moves from-val) (:position to-val))
+    (when ((p/possible-moves from-val (peek @history))
+           (:position to-val))
       (swap! history conj {(:position from-val) from-val (:position to-val) to-val})
       (om/update! app dissoc :selected)
       (om/update! from dissoc :value)
@@ -51,7 +52,7 @@
 (defn build-squares [app select-chan]
   (let [rows (partition 8 (-> app :squares vals))
         selected (:selected app)
-        targets (p/possible-moves selected)
+        targets (p/possible-moves selected (peek @history))
         init (fn [{:keys [position] :as square}]
                (cond-> square
                  (targets position) (assoc :targetable true)
