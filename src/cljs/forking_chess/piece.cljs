@@ -26,18 +26,18 @@
   (into #{}
         (remove nil? moves)))
 
-(defmulti possible-moves #(get-in % [:value :type]))
-
 (defn en-passant [piece prior-move]
-  (when (= (-> prior-move vals first :value :type) :P)
+  (when (= (-> prior-move :from :value :type) :P)
     (let [{:keys [x y]} (piece-to-coords piece)
-          from (vals (position-to-coords (-> prior-move keys first)))
-          to (vals (position-to-coords (-> prior-move keys last)))]
+          from (vals (position-to-coords (-> prior-move :from :position)))
+          to (vals (position-to-coords (-> prior-move :to :position)))]
       (first (for [x-op [+ -]
                    y-op [+ -]
                    :when (and (= [(x-op x 1) (y-op y 2)] from)
                               (= [(x-op x 1) y] to))]
                (coords-to-position (x-op x 1) (y-op y 1)))))))
+
+(defmulti possible-moves #(get-in % [:value :type]))
 
 (defmethod possible-moves :P [piece prior-move]
   (let [{:keys [x y]} (piece-to-coords piece)
@@ -114,17 +114,17 @@
 ;;;;;;;;;;;;;
 (comment
   (en-passant {:position "b5" :value {:color "white" :type :P}}
-                  {"a7" {:value {:color "black" :type :P}}
-                   "a5" {:value nil}})
+              {:from {:position "a7" :value {:color "black" :type :P}}
+               :to {:position "a5" :value nil}})
   (en-passant {:position "b5" :value {:color "white" :type :P}}
-                  {"c7" {:value {:color "black" :type :P}}
-                   "c5" {:value nil}})
+              {:from {:position "c7" :value {:color "black" :type :P}}
+               :to {:position "c5" :value nil}})
   (en-passant {:position "f4" :value {:color "black" :type :P}}
-                  {"g2" {:value {:color "white" :type :P}}
-                   "g4" {:value nil}})
+              {:from {:position "g2" :value {:color "white" :type :P}}
+               :to {:position "g4" :value nil}})
   (en-passant {:position "f4" :value {:color "black" :type :P}}
-                  {"e2" {:value {:color "white" :type :P}}
-                   "e4" {:value nil}})
+              {:from {:position "e2" :value {:color "white" :type :P}}
+               :to {:position "e4" :value nil}})
   (possible-moves {:position "h2" :value {:color "white" :type :K}})
   (possible-moves {:position "h2" :value {:color "white" :type :Q}})
   (possible-moves {:position "h2" :value {:color "white" :type :R}})

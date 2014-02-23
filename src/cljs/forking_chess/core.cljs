@@ -19,7 +19,7 @@
         to-val @to]
     (when ((p/possible-moves from-val (peek @history))
            (:position to-val))
-      (swap! history conj {(:position from-val) from-val (:position to-val) to-val})
+      (swap! history conj {:from from-val :to to-val})
       (om/update! app dissoc :selected)
       (om/update! from dissoc :value)
       (om/update! to assoc :value value))))
@@ -35,8 +35,13 @@
 
 (defn rewind! [app]
   (when-let [prior-move (peek @history)]
-    (om/transact! app :squares #(merge % prior-move))
+    (om/transact! app :squares
+                  (fn [history] (let [from (:from prior-move)
+                                      to (:to prior-move)]
+                                  (merge history {(:position from) from
+                                                  (:position to) to}))))
     (swap! history pop)))
+
 
 (defn square [{:keys [position value selected targetable] :as square} owner]
   (reify
