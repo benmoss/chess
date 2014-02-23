@@ -5,7 +5,7 @@
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [clojure.string :as str]
-            [forking-chess.crossovers.board :as b]
+            [forking-chess.board :as b]
             [forking-chess.piece :as p]))
 
 (enable-console-print!)
@@ -41,7 +41,7 @@
   (reify
     om/IRenderState
     (render-state [_ {:keys [select-chan]}]
-      (let [class-names (cond-> []
+      (let [class-names (cond-> [position (:type value)]
                           targetable (conj "targetable")
                           selected (conj "selected"))]
         (dom/td #js {:onClick #(put! select-chan square)
