@@ -18,14 +18,13 @@
                  [cljs-http "0.1.3"]
                  [om "0.3.0"]]
 
-  :dev-dependencies [[com.cemerick/piggieback "0.1.2"]]
+  :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.1.2"]]
+                   :plugins [[lein-cljsbuild "1.0.1"]
+                             [lein-ring "0.8.7"]
+                             [lein-pdo "0.1.1"]
+                             [com.cemerick/austin "0.1.3"]]}}
 
-  :plugins [[lein-cljsbuild "1.0.1"]
-            [lein-ring "0.8.7"]
-            [lein-pdo "0.1.1"]
-            [com.cemerick/austin "0.1.3"]]
-
-  :aliases {"dev" ["pdo" "cljsbuild" "auto" "dev," "ring" "server-headless"]}
+  :aliases {"dev" ["with-profile" "dev" "pdo" "cljsbuild" "auto" "dev," "ring" "server-headless"]}
 
   :ring {:handler forking-chess.core/app
          :init    forking-chess.core/init}
