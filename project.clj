@@ -16,8 +16,9 @@
                  [compojure "1.1.6"]
                  [cheshire "5.2.0"]
                  [cljs-http "0.1.3"]
-                 [om "0.3.0"]
-                 [com.cemerick/piggieback "0.1.2"]]
+                 [om "0.3.0"]]
+
+  :dev-dependencies [[com.cemerick/piggieback "0.1.2"]]
 
   :plugins [[lein-cljsbuild "1.0.1"]
             [lein-ring "0.8.7"]
