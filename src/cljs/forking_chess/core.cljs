@@ -20,18 +20,18 @@
     (when ((p/possible-moves from-val (peek @history))
            (:position to-val))
       (swap! history conj {:from from-val :to to-val})
-      (om/update! app dissoc :selected)
-      (om/update! from dissoc :value)
-      (om/update! to assoc :value value))))
+      (om/update! app :selected nil)
+      (om/update! from :value nil)
+      (om/update! to :value value))))
 
 (defn update-square! [app square]
   (let [selected (:selected @app)
         selecting? (:value @square)
         unselecting? (and selected (= @square @selected))]
     (cond
-      unselecting? (om/update! app dissoc :selected)
+      unselecting? (om/update! app :selected nil)
       selected (move-piece! selected square app)
-      selecting? (om/update! app assoc :selected square))))
+      selecting? (om/update! app :selected square))))
 
 (defn rewind! [app]
   (when-let [prior-move (peek @history)]
@@ -66,8 +66,8 @@
                  :init-state {:select-chan select-chan}
                  :fn init}]
     (apply dom/table #js {:className "chess-board"}
-           (map #(dom/tr #js {:key (:position (first %))}
-                         (om/build-all square % options))
+           (map (fn [row] (apply dom/tr #js {:key (:position (first row))}
+                                 (om/build-all square row options)))
                 rows))))
 
 (defn chess-board [app owner]
@@ -91,4 +91,7 @@
                (build-squares app select)
                (dom/button #js {:onClick #(put! rewind :t)} "Rewind")))))
 
-(om/root app-state chess-board (.getElementById js/document "content"))
+(om/root
+  chess-board
+  app-state
+  {:target (.getElementById js/document "content")})

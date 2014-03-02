@@ -10,13 +10,13 @@
   :source-paths ["src/clj", "src/cljs"]
 
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2138"]
+                 [org.clojure/clojurescript "0.0-2156"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.6"]
                  [cheshire "5.2.0"]
                  [cljs-http "0.1.3"]
-                 [om "0.3.0"]]
+                 [om "0.5.0"]]
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.1.2"]]
                    :plugins [[lein-cljsbuild "1.0.1"]
@@ -36,8 +36,7 @@
                                    :output-to "resources/public/js/forking_chess.js"
                                    :output-dir "resources/public/js/out"
                                    :optimizations :none
-                                   :source-map true
-                                   :externs ["om/externs/react.js"]}}
+                                   :source-map true}}
                        {:id "release"
                         :source-paths ["src/cljs"]
                         :compiler {
@@ -46,7 +45,7 @@
                                    :optimizations :advanced
                                    :pretty-print false
                                    :output-wrapper false
-                                   :preamble ["om/react.min.js"]
+                                   :preamble ["react/react.min.js"]
                                    :externs ["om/externs/react.js"]
                                    :closure-warnings
                                    {:non-standard-jsdoc :off}}}]})
