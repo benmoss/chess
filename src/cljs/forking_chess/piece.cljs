@@ -110,26 +110,3 @@
                 (coords-to-position (op1 x xmove) (op2 y ymove))))))
 
 (defmethod possible-moves :default [_] #{})
-
-;;;;;;;;;;;;;
-(comment
-  (en-passant {:position "b5" :value {:color "white" :type :P}}
-              {:from {:position "a7" :value {:color "black" :type :P}}
-               :to {:position "a5" :value nil}})
-  (en-passant {:position "b5" :value {:color "white" :type :P}}
-              {:from {:position "c7" :value {:color "black" :type :P}}
-               :to {:position "c5" :value nil}})
-  (en-passant {:position "f4" :value {:color "black" :type :P}}
-              {:from {:position "g2" :value {:color "white" :type :P}}
-               :to {:position "g4" :value nil}})
-  (en-passant {:position "f4" :value {:color "black" :type :P}}
-              {:from {:position "e2" :value {:color "white" :type :P}}
-               :to {:position "e4" :value nil}})
-  (possible-moves {:position "h2" :value {:color "white" :type :K}})
-  (possible-moves {:position "h2" :value {:color "white" :type :Q}})
-  (possible-moves {:position "h2" :value {:color "white" :type :R}})
-  (possible-moves {:position "h2" :value {:color "white" :type :B}})
-  (possible-moves {:position "h2" :value {:color "white" :type :N}})
-  (possible-moves {:position "a7" :value {:color "black" :type :P}})
-  (possible-moves {:position "h2" :value {:color "white" :type :P}})
-  (possible-moves {:position "h2" :value {:color "black" :type :P}}))

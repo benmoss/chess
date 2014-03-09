@@ -7,7 +7,7 @@
 
   :min-lein-version "2.3.4"
 
-  :source-paths ["src/clj", "src/cljs"]
+  :source-paths ["src/clj", "src/cljs", "test/cljs"]
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2156"]
@@ -20,6 +20,7 @@
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.1.2"]]
                    :plugins [[lein-cljsbuild "1.0.1"]
+                             [com.cemerick/clojurescript.test "0.2.2"]
                              [lein-ring "0.8.7"]
                              [lein-pdo "0.1.1"]
                              [com.cemerick/austin "0.1.3"]]}}
@@ -29,11 +30,9 @@
   :ring {:handler forking-chess.core/app
          :init    forking-chess.core/init}
 
-  :cljsbuild {
-              :builds [{:id "dev"
-                        :source-paths ["src/cljs"]
-                        :compiler {
-                                   :output-to "resources/public/js/forking_chess.js"
+  :cljsbuild {:builds [{:id "dev"
+                        :source-paths ["src/cljs" "test/cljs"]
+                        :compiler {:output-to "resources/public/js/forking_chess.js"
                                    :output-dir "resources/public/js/out"
                                    :optimizations :none
                                    :source-map true}}
@@ -48,4 +47,11 @@
                                    :preamble ["react/react.min.js"]
                                    :externs ["om/externs/react.js"]
                                    :closure-warnings
-                                   {:non-standard-jsdoc :off}}}]})
+                                   {:non-standard-jsdoc :off}}}
+                       {:id "test"
+                        :source-paths ["src/cljs" "test/cljs"]
+                        :compiler {:output-to "resources/private/js/unit-tests.js"
+                                   :optimizations :whitespace
+                                   :pretty-print true}}]
+              :test-commands {"unit" ["phantomjs" :runner
+                                      "resources/private/js/unit-tests.js"]}})
