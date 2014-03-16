@@ -21,8 +21,8 @@
 
 (def squares
   (into (sorted-map-by (fn [x y]
-                         (let [[xrow xcol] (-> x position-to-coords vals)
-                               [yrow ycol] (-> y position-to-coords vals)]
+                         (let [[xrow xcol] (position-to-coords x)
+                               [yrow ycol] (position-to-coords y)]
                            (compare [ycol xrow] [xcol yrow]))))
         (for [row (range 1 9)
               column (seq "abcdefgh")

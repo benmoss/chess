@@ -30,6 +30,8 @@
   :ring {:handler forking-chess.core/app
          :init    forking-chess.core/init}
 
+  :hooks [leiningen.cljsbuild]
+
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src/cljs" "test/cljs"]
                         :compiler {:output-to "resources/public/js/forking_chess.js"

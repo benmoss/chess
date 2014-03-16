@@ -14,10 +14,10 @@
 (def history (atom '()))
 
 (defn move-piece! [from to app]
-  (let [value (:value @from)
-        from-val @from
-        to-val @to]
-    (when ((p/possible-moves from-val (peek @history))
+  (let [from-val @from
+        to-val @to
+        value (:value from-val)]
+    (when ((p/moves value (:position from-val) (:squares @app) @history)
            (:position to-val))
       (swap! history conj {:from from-val :to to-val})
       (om/update! app :selected nil)
@@ -57,7 +57,7 @@
 (defn build-squares [app select-chan]
   (let [rows (partition 8 (-> app :squares vals))
         selected (:selected app)
-        targets (p/possible-moves selected (peek @history))
+        targets (p/moves (:value selected) (:position selected) (:squares app) @history)
         init (fn [{:keys [position] :as square}]
                (cond-> square
                  (targets position) (assoc :targetable true)
