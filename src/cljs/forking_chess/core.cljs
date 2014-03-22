@@ -26,11 +26,11 @@
 
 (defn update-square! [app square position]
   (let [selected (:selected @app)
-        unselecting? (and selected (= position selected))]
+        selectable? (get-in @app [:squares position])]
+    (om/update! app :selected nil)
     (cond
-      unselecting? (om/update! app :selected nil)
       selected (move-piece! selected position app)
-      :else (om/update! app :selected position))))
+      selectable? (om/update! app :selected position))))
 
 (defn rewind! [app]
   (when-let [prior-move (peek @history)]
