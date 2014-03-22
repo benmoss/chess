@@ -1,6 +1,6 @@
 (ns forking-chess.board
   (:require [clojure.string :as str]
-            [forking-chess.piece :refer [position-to-coords]]))
+            [forking-chess.utils :refer [position-to-coords]]))
 
 (enable-console-print!)
 
