@@ -24,7 +24,7 @@
       (om/update! app [:squares from] nil)
       (om/update! app [:squares to] piece))))
 
-(defn update-square! [app square position]
+(defn update-board! [app piece position]
   (let [selected (:selected @app)
         selectable? (get-in @app [:squares position])]
     (om/update! app :selected nil)
@@ -33,25 +33,23 @@
       selectable? (om/update! app :selected position))))
 
 (defn rewind! [app]
-  (when-let [prior-move (peek @history)]
-    (om/transact! app :squares
-                  (fn [history] (let [from (:from prior-move)
-                                      to (:to prior-move)
-                                      piece (:piece prior-move)
-                                      captured (:captured prior-move)]
-                                  (merge history {from piece
-                                                  to captured}))))
-    (swap! history pop)))
+  (let [prior-move (peek @history)
+        from (:from prior-move)
+        to (:to prior-move)
+        piece (:piece prior-move)
+        captured (:captured prior-move)]
+    (when prior-move
+      (om/transact! app :squares #(merge % {from piece to captured}))
+      (swap! history pop))))
 
-
-(defn square [{:keys [position type color selected targetable] :as square} owner]
+(defn square [{:keys [position type color selected targetable] :as piece} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [select-chan]}]
       (let [class-names (cond-> [position type]
                           targetable (conj "targetable")
                           selected (conj "selected"))]
-        (dom/td #js {:onClick #(put! select-chan [square position])
+        (dom/td #js {:onClick #(put! select-chan [piece position])
                      :className  (apply str (interpose " " class-names))}
                 (dom/a nil (b/icons #{type color})))))))
 
@@ -85,8 +83,8 @@
       (let [select (om/get-state owner :select)
             rewind (om/get-state owner :rewind)]
         (go (while true
-              (let [[square position] (<! select)]
-                (update-square! app square position))))
+              (let [[piece position] (<! select)]
+                (update-board! app piece position))))
         (go (while true
               (<! rewind) (rewind! app)))))
     om/IRenderState
