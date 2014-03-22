@@ -22,11 +22,11 @@
 (defn piece-to-coords [piece]
   (-> piece :position position-to-coords))
 
-(defn en-passant [piece [x y] {:keys [from to]}]
-  (let [[from-x from-y] (position-to-coords (:position from))
-        [to-x to-y] (position-to-coords (:position to))]
+(defn en-passant [piece [x y] prior-move]
+  (let [[from-x from-y] (position-to-coords (:from prior-move))
+        [to-x to-y] (position-to-coords (:to prior-move))]
     (when (and (= (:type piece) :P)
-               (= (-> from :value :type) :P)
+               (= (get-in prior-move [:piece :type]) :P)
                (= to-y y)
                (= (Math/abs (- from-y to-y)) 2)
                (= (Math/abs (- to-x x)) 1))

@@ -15,53 +15,51 @@
 
 (defn move-piece! [from to app]
   (let [board (:squares @app)
-        piece (get-in board [from :value])
-        captured (get-in board [to :value])
+        piece (get board from)
+        captured (get board to)
         moves (p/moves piece from board @history)]
     (when (moves to)
       (swap! history conj {:from from :to to :piece piece :captured captured})
       (om/update! app :selected nil)
-      (om/update! app [:squares from :value] nil)
-      (om/update! app [:squares to :value] piece))))
+      (om/update! app [:squares from] nil)
+      (om/update! app [:squares to] piece))))
 
 (defn update-square! [app square position]
   (let [selected (:selected @app)
-        selecting? (:value @square)
         unselecting? (and selected (= position selected))]
     (cond
       unselecting? (om/update! app :selected nil)
       selected (move-piece! selected position app)
-      selecting? (om/update! app :selected position))))
+      :else (om/update! app :selected position))))
 
 (defn rewind! [app]
   (when-let [prior-move (peek @history)]
-    (println prior-move)
     (om/transact! app :squares
                   (fn [history] (let [from (:from prior-move)
                                       to (:to prior-move)
                                       piece (:piece prior-move)
                                       captured (:captured prior-move)]
-                                  (merge history {from {:value piece}
+                                  (merge history {from piece
                                                   to captured}))))
     (swap! history pop)))
 
 
-(defn square [{:keys [position value selected targetable] :as square} owner]
+(defn square [{:keys [position type color selected targetable] :as square} owner]
   (reify
     om/IRenderState
     (render-state [_ {:keys [select-chan]}]
-      (let [class-names (cond-> [position (:type value)]
+      (let [class-names (cond-> [position type]
                           targetable (conj "targetable")
                           selected (conj "selected"))]
         (dom/td #js {:onClick #(put! select-chan [square position])
                      :className  (apply str (interpose " " class-names))}
-                (dom/a nil (b/icons (-> value vals set))))))))
+                (dom/a nil (b/icons #{type color})))))))
 
 (defn build-squares [app select-chan]
   (let [board (:squares app)
         rows (partition 8 board)
         selected-square (:selected app)
-        selected-piece (get-in board [selected-square :value])
+        selected-piece (get board selected-square)
         targets (p/moves selected-piece selected-square board @history)
         init (fn [[position piece]]
                (cond-> piece

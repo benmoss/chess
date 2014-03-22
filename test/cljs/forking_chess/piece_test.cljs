@@ -8,38 +8,32 @@
          (p/moves {:color "white" :type :P}
                   "b5"
                   {}
-                  [{:from {:position "a7" :value {:color "black" :type :P}}
-                    :to {:position "a5" :value nil}}])))
+                  [{:from "a7" :to "a5" :piece {:color "black" :type :P}}])))
   (is (= #{"b6" "c6"}
          (p/moves {:color "white" :type :P}
                   "b5"
                   {}
-                  [{:from {:position "c7" :value {:color "black" :type :P}}
-                    :to {:position "c5" :value nil}}])))
+                  [{:from "c7", :to "c5", :piece {:color "black" :type :P}}])))
   (is (= #{"f3" "g3"}
          (p/moves {:color "black" :type :P}
                   "f4"
                   {}
-                  [{:from {:position "g2" :value {:color "white" :type :P}}
-                    :to {:position "g4" :value nil}}])))
+                  [{:from "g2" :to "g4" :piece {:color "white" :type :P}}])))
   (is (= #{"f3" "e3"}
          (p/moves {:color "black" :type :P}
                   "f4"
                   {}
-                  [{:from {:position "e2" :value {:color "white" :type :P}}
-                    :to {:position "e4" :value nil}}])))
+                  [{:from "e2" :to "e4" :piece {:color "white" :type :P}}])))
   (testing "non-applicable situations"
     (is (= #{"c5"}
            (p/moves {:color "white" :type :P}
                     "c4"
                     {}
-                    [{:from {:position "b7" :value {:color "black" :type :P}}
-                      :to {:position "b5" :value nil}}])))
+                    [{:from "b7" :to "b5" :piece {:color "black" :type :P}}])))
     (is (nil? ((p/moves {:color "white" :type :R}
-                  "c5"
-                  {}
-                  [{:from {:position "b7" :value {:color "black" :type :P}}
-                    :to {:position "b5" :value nil}}])
+                        "c5"
+                        {}
+                        [{:from "b7" :to "b5" :piece {:color "black" :type :P}}])
                "b6")))))
 
 (deftest king
@@ -56,7 +50,7 @@
 
 (deftest bishop
   (is (= #{"g1" "g3" "f4" "e5" "d6" "c7" "b8"}
-          (p/moves {:color "white" :type :B} "h2" {} []))))
+         (p/moves {:color "white" :type :B} "h2" {} []))))
 
 (deftest knight
   (is (= #{"f1" "f3" "g4"}

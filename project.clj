@@ -16,7 +16,7 @@
                  [compojure "1.1.6"]
                  [cheshire "5.2.0"]
                  [cljs-http "0.1.3"]
-                 [om "0.5.0"]]
+                 [om "0.5.3"]]
 
   :profiles {:dev {:dependencies [[com.cemerick/piggieback "0.1.2"]]
                    :plugins [[lein-cljsbuild "1.0.1"]

@@ -28,7 +28,7 @@
               column (seq "abcdefgh")
               :let [position (str column row)
                     value (initial-placement column row)]]
-          [position {:value value}])))
+          [position value])))
 
 (def icons
   {#{"white" :K} \♔
