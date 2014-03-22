@@ -1,6 +1,10 @@
 (ns forking-chess.piece
   (:require [clojure.set :refer [map-invert]]))
 
+;
+; utility fns
+;
+
 (def column-to-int
   (zipmap (seq "abcdefgh")
           (range 8)))
@@ -22,17 +26,9 @@
 (defn piece-to-coords [piece]
   (-> piece :position position-to-coords))
 
-(defn en-passant [piece [x y] prior-move]
-  (let [[from-x from-y] (position-to-coords (:from prior-move))
-        [to-x to-y] (position-to-coords (:to prior-move))]
-    (when (and (= (:type piece) :P)
-               (= (get-in prior-move [:piece :type]) :P)
-               (= to-y y)
-               (= (Math/abs (- from-y to-y)) 2)
-               (= (Math/abs (- to-x x)) 1))
-      (cond
-        (= (- from-y to-y)  2) [to-x (inc to-y)]
-        (= (- from-y to-y) -2) [to-x (dec to-y)]))))
+;
+; static move shapes
+;
 
 (def king-moves
   (let [ops [inc dec identity]]
@@ -73,39 +69,53 @@
           :when (not= xmove ymove)]
       [(op1 0 xmove) (op2 0 ymove)])))
 
-(defn basic-moves [{:keys [color type]}]
-  ({:K king-moves
-    :Q (concat rook-moves bishop-moves)
-    :R rook-moves
-    :B bishop-moves
-    :N knight-moves
-    :P (if (= "black" color)
-         [[0 -1]]
-         [[0  1]])} type))
-
-(defn apply-moves [[x y] moves]
+(defn default-moves [piece [x y]]
   (map (fn [[movex movey]] [(+ movex x) (+ movey y)])
-       moves))
+       ({:K king-moves
+         :Q (concat rook-moves bishop-moves)
+         :R rook-moves
+         :B bishop-moves
+         :N knight-moves
+         :P []} (:type piece))))
 
-(defn positional-moves [{:keys [type color]} [x y]]
-  (when (= :P type)
-    (let [op ({"white" + "black" -} color)
-          initial-move? (or (and (= "white" color) (= 1 y))
-                            (and (= "black" color) (= 6 y)))]
-      (when initial-move?
-        [[x (op y 2)]]))))
+;
+; pawn moves
+;
 
-(defn stateful-moves [{:keys [type] :as piece} coords [prior-move]]
-  [(en-passant piece coords prior-move)])
+(defn en-passant [pawn [x y] prior-move]
+  (let [[from-x from-y] (position-to-coords (:from prior-move))
+        [to-x to-y] (position-to-coords (:to prior-move))]
+    (when (and (= (:type pawn) :P)
+               (= (get-in prior-move [:piece :type]) :P)
+               (= to-y y)
+               (= (Math/abs (- from-y to-y)) 2)
+               (= (Math/abs (- to-x x)) 1))
+      (cond
+        (= (- from-y to-y)  2) [[to-x (inc to-y)]]
+        (= (- from-y to-y) -2) [[to-x (dec to-y)]]))))
 
-(defn default-moves [piece coords]
-  (apply-moves coords (basic-moves piece)))
+(defn initial-move [{:keys [color]} [x y]]
+  (let [op ({"white" + "black" -} color)
+        initial-move? (or (and (= "white" color) (= 1 y))
+                          (and (= "black" color) (= 6 y)))]
+    (when initial-move?
+      [[x (op y 2)]])))
+
+(defn pawn-moves [pawn coords board history]
+  (concat (en-passant pawn coords (peek history))
+          (initial-move pawn coords)
+          (if (= "black" (:color pawn))
+            [[(first coords) (dec (last coords))]]
+            [[(first coords) (inc (last coords))]])))
+
+(defn contextual-moves [piece coords board history]
+  (when (= :P (:type piece))
+    (pawn-moves piece coords board history)))
 
 (defn moves [piece position board history]
   (let [coords (position-to-coords position)]
     (->> (concat (default-moves piece coords)
-                 (positional-moves piece coords)
-                 (stateful-moves piece coords history))
+                 (contextual-moves piece coords board history))
          (map coords-to-position)
          (remove nil?)
          (into #{}))))
