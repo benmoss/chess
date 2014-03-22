@@ -85,10 +85,10 @@
       (let [select (om/get-state owner :select)
             rewind (om/get-state owner :rewind)]
         (go (while true
-              (let [[message c] (alts! [select rewind])]
-                (if (= c select)
-                  (update-square! app (first message) (last message))
-                  (rewind! app)))))))
+              (let [[square position] (<! select)]
+                (update-square! app square position))))
+        (go (while true
+              (<! rewind) (rewind! app)))))
     om/IRenderState
     (render-state [_ {:keys [selectable select rewind] :as state}]
       (dom/div nil
