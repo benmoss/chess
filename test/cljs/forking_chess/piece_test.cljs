@@ -1,5 +1,5 @@
 (ns forking-chess.piece-test
-  (:require-macros [cemerick.cljs.test :refer [is deftest]])
+  (:require-macros [cemerick.cljs.test :refer [is deftest run-tests testing]])
   (:require [cemerick.cljs.test :as t]
             [forking-chess.piece :as p]))
 
@@ -27,7 +27,20 @@
                   "f4"
                   {}
                   [{:from {:position "e2" :value {:color "white" :type :P}}
-                    :to {:position "e4" :value nil}}]))))
+                    :to {:position "e4" :value nil}}])))
+  (testing "non-applicable situations"
+    (is (= #{"c5"}
+           (p/moves {:color "white" :type :P}
+                    "c4"
+                    {}
+                    [{:from {:position "b7" :value {:color "black" :type :P}}
+                      :to {:position "b5" :value nil}}])))
+    (is (nil? ((p/moves {:color "white" :type :R}
+                  "c5"
+                  {}
+                  [{:from {:position "b7" :value {:color "black" :type :P}}
+                    :to {:position "b5" :value nil}}])
+               "b6")))))
 
 (deftest king
   (is (= #{"h1" "g1" "g2" "h3" "g3"}

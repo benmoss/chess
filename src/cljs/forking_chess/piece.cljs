@@ -23,9 +23,13 @@
   (-> piece :position position-to-coords))
 
 (defn en-passant [piece [x y] {:keys [from to]}]
-  (when (= (-> from :value :type) :P)
-    (let [[from-x from-y] (position-to-coords (:position from))
-          [to-x to-y] (position-to-coords (:position to))]
+  (let [[from-x from-y] (position-to-coords (:position from))
+        [to-x to-y] (position-to-coords (:position to))]
+    (when (and (= (:type piece) :P)
+               (= (-> from :value :type) :P)
+               (= to-y y)
+               (= (Math/abs (- from-y to-y)) 2)
+               (= (Math/abs (- to-x x)) 1))
       (cond
         (= (- from-y to-y)  2) [to-x (inc to-y)]
         (= (- from-y to-y) -2) [to-x (dec to-y)]))))
@@ -94,8 +98,7 @@
         [[x (op y 2)]]))))
 
 (defn stateful-moves [{:keys [type] :as piece} coords [prior-move]]
-  (when (= type :P)
-    [(en-passant piece coords prior-move)]))
+  [(en-passant piece coords prior-move)])
 
 (defn default-moves [piece coords]
   (apply-moves coords (basic-moves piece)))
