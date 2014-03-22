@@ -77,9 +77,18 @@
     (when initial-move?
       [[x (op y 2)]])))
 
+(defn attacks [{:keys [color]} [x y] board]
+  (let [y-op ({"white" inc "black" dec} color)
+        left-move [(dec x) (y-op y)]
+        right-move [(inc x) (y-op y)]]
+    (cond-> []
+      (get board (coords-to-position left-move)) (conj left-move)
+      (get board (coords-to-position right-move)) (conj right-move))))
+
 (defn pawn-moves [pawn coords board history]
   (concat (en-passant pawn coords (peek history))
           (initial-move pawn coords)
+          (attacks pawn coords board)
           (if (= "black" (:color pawn))
             [[(first coords) (dec (last coords))]]
             [[(first coords) (inc (last coords))]])))

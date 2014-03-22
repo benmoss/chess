@@ -64,4 +64,9 @@
   (is (= #{"h3" "h4"}
          (p/moves {:color "white" :type :P} "h2" {} [])))
   (is (= #{"h1"}
-         (p/moves {:color "black" :type :P} "h2" {} []))))
+         (p/moves {:color "black" :type :P} "h2" {} [])))
+  (is (= #{"h1" "g1"}
+         (p/moves {:color "black" :type :P}
+                  "h2"
+                  {"g1" {:color "white" :type :R}}
+                  []))))
