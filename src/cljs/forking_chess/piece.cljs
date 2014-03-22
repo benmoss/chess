@@ -73,8 +73,6 @@
           :when (not= xmove ymove)]
       [(op1 0 xmove) (op2 0 ymove)])))
 
-(def pawn-moves)
-
 (defn basic-moves [{:keys [color type]}]
   ({:K king-moves
     :Q (concat rook-moves bishop-moves)

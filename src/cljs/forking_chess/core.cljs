@@ -14,32 +14,35 @@
 (def history (atom '()))
 
 (defn move-piece! [from to app]
-  (let [from-val @from
-        to-val @to
-        value (:value from-val)]
-    (when ((p/moves value (:position from-val) (:squares @app) @history)
-           (:position to-val))
-      (swap! history conj {:from from-val :to to-val})
+  (let [board (:squares @app)
+        piece (get-in board [from :value])
+        captured (get-in board [to :value])
+        moves (p/moves piece from board @history)]
+    (when (moves to)
+      (swap! history conj {:from from :to to :piece piece :captured captured})
       (om/update! app :selected nil)
-      (om/update! from :value nil)
-      (om/update! to :value value))))
+      (om/update! app [:squares from :value] nil)
+      (om/update! app [:squares to :value] piece))))
 
-(defn update-square! [app square]
+(defn update-square! [app square position]
   (let [selected (:selected @app)
         selecting? (:value @square)
-        unselecting? (and selected (= @square @selected))]
+        unselecting? (and selected (= position selected))]
     (cond
       unselecting? (om/update! app :selected nil)
-      selected (move-piece! selected square app)
-      selecting? (om/update! app :selected square))))
+      selected (move-piece! selected position app)
+      selecting? (om/update! app :selected position))))
 
 (defn rewind! [app]
   (when-let [prior-move (peek @history)]
+    (println prior-move)
     (om/transact! app :squares
                   (fn [history] (let [from (:from prior-move)
-                                      to (:to prior-move)]
-                                  (merge history {(:position from) from
-                                                  (:position to) to}))))
+                                      to (:to prior-move)
+                                      piece (:piece prior-move)
+                                      captured (:captured prior-move)]
+                                  (merge history {from {:value piece}
+                                                  to captured}))))
     (swap! history pop)))
 
 
@@ -50,23 +53,26 @@
       (let [class-names (cond-> [position (:type value)]
                           targetable (conj "targetable")
                           selected (conj "selected"))]
-        (dom/td #js {:onClick #(put! select-chan square)
+        (dom/td #js {:onClick #(put! select-chan [square position])
                      :className  (apply str (interpose " " class-names))}
                 (dom/a nil (b/icons (-> value vals set))))))))
 
 (defn build-squares [app select-chan]
-  (let [rows (partition 8 (-> app :squares vals))
-        selected (:selected app)
-        targets (p/moves (:value selected) (:position selected) (:squares app) @history)
-        init (fn [{:keys [position] :as square}]
-               (cond-> square
+  (let [board (:squares app)
+        rows (partition 8 board)
+        selected-square (:selected app)
+        selected-piece (get-in board [selected-square :value])
+        targets (p/moves selected-piece selected-square board @history)
+        init (fn [[position piece]]
+               (cond-> piece
+                 true (assoc :position position) ; kludge
                  (targets position) (assoc :targetable true)
-                 (= selected square) (assoc :selected true)))
+                 (= selected-square position) (assoc :selected true)))
         options {:key :position
                  :init-state {:select-chan select-chan}
                  :fn init}]
     (apply dom/table #js {:className "chess-board"}
-           (map (fn [row] (apply dom/tr #js {:key (:position (first row))}
+           (map (fn [row] (apply dom/tr #js {:key (ffirst row)}
                                  (om/build-all square row options)))
                 rows))))
 
@@ -81,9 +87,9 @@
       (let [select (om/get-state owner :select)
             rewind (om/get-state owner :rewind)]
         (go (while true
-              (let [[square c] (alts! [select rewind])]
+              (let [[message c] (alts! [select rewind])]
                 (if (= c select)
-                  (update-square! app square)
+                  (update-square! app (first message) (last message))
                   (rewind! app)))))))
     om/IRenderState
     (render-state [_ {:keys [selectable select rewind] :as state}]
