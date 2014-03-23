@@ -10,8 +10,6 @@ Requires [leiningen](https://github.com/technomancy/leiningen). Run `lein dev` a
 
 * Handle castling
 
-* Handle en-passant captures
-
 * Handle promotions
 
 * "Fork" a game

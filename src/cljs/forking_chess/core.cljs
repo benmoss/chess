@@ -20,6 +20,11 @@
         moves (js->clj (.moves game opts))]
     (map strings-to-keywords moves)))
 
+(defn handle-flags [app {:keys [flags to from color] :as move}]
+  (condp some flags
+    #{\e} (om/update! app [:squares (str (first to) (last from))] nil)
+    #{\b \n \c} nil))
+
 (defn move-piece! [from to app]
   (let [board (:squares @app)
         piece (get board from)
@@ -30,13 +35,14 @@
       (.move game (clj->js move))
       (om/update! app :selected nil)
       (om/update! app [:squares from] nil)
-      (om/update! app [:squares to] piece))))
+      (om/update! app [:squares to] piece)
+      (handle-flags app move))))
 
 (defn update-board! [app piece position]
   (let [selected (:selected @app)
         current-color (.turn game)
         target-square (get-in @app [:squares position])
-        moving? (not= current-color (:color target-square))
+        moving? (and selected (not= current-color (:color target-square)))
         switching-selection? (= current-color (:color target-square))]
     (om/update! app :selected nil)
     (cond
@@ -51,8 +57,12 @@
           piece {:type (:piece move) :color (:color move)}
           captured (when (:captured move)
                      {:color ({"w" "b" "b" "w"} (:color move))
-                      :type (:captured move)})]
-      (om/transact! app :squares #(merge % {from piece to captured})))))
+                      :type (:captured move)})
+          en-passant? (some #{\e} (:flags move))
+          en-passant-loc (str (first to) (last from))]
+      (if en-passant?
+        (om/transact! app :squares #(merge % {from piece en-passant-loc captured to nil}))
+        (om/transact! app :squares #(merge % {from piece to captured}))))))
 
 (defn square [{:keys [position type color selected targetable] :as piece} owner]
   (reify
@@ -79,10 +89,11 @@
         options {:key :position
                  :init-state {:select-chan select-chan}
                  :fn init}]
-    (apply dom/table #js {:className "chess-board"}
-           (map (fn [row] (apply dom/tr #js {:key (ffirst row)}
-                                 (om/build-all square row options)))
-                rows))))
+    (dom/table #js {:className "chess-board"}
+               (apply dom/tbody nil
+                      (map (fn [row] (apply dom/tr #js {:key (ffirst row)}
+                                            (om/build-all square row options)))
+                           rows)))))
 
 (defn chess-board [app owner]
   (reify
