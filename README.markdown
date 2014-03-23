@@ -8,14 +8,6 @@ Requires [leiningen](https://github.com/technomancy/leiningen). Run `lein dev` a
 
 ## Todo
 
-* Implement castling
-
-* Implement "legal moves" as a subset of "possible moves"
-
-* Implement turn restrictions
-
-* Fix css issue with "selection" borders overlapping/colliding
-
 * "Fork" a game
 
 * Multiplayer
