@@ -45,8 +45,11 @@
     (let [move (-> undone-move js->clj strings-to-keywords)
           from (:from move)
           to (:to move)
-          piece {:type (:piece move) :color (:color move)}]
-      (om/transact! app :squares #(merge % {from piece to nil})))))
+          piece {:type (:piece move) :color (:color move)}
+          captured (when (:captured move)
+                     {:color ({"w" "b" "b" "w"} (:color move))
+                      :type (:captured move)})]
+      (om/transact! app :squares #(merge % {from piece to captured})))))
 
 (defn square [{:keys [position type color selected targetable] :as piece} owner]
   (reify
