@@ -6,7 +6,7 @@
             [om.dom :as dom :include-macros true]
             [clojure.string :as str]
             [forking-chess.board :as b]
-            [forking-chess.piece :as p]))
+            [forking-chess.utils :refer [strings-to-keywords]]))
 
 (enable-console-print!)
 
@@ -18,7 +18,7 @@
 (defn moves-for-square [square]
   (let [opts (if square #js{:verbose true :square square} #js{:verbose true})
         moves (js->clj (.moves game opts))]
-    (map #(into {} (for [[k v] %] [(keyword k) v])) moves)))
+    (map strings-to-keywords moves)))
 
 (defn move-piece! [from to app]
   (let [board (:squares @app)
@@ -28,7 +28,6 @@
         move (some #(when (= to (:to %)) %) moves)]
     (when move
       (.move game (clj->js move))
-      (swap! history conj {:from from :to to :piece piece :captured captured})
       (om/update! app :selected nil)
       (om/update! app [:squares from] nil)
       (om/update! app [:squares to] piece))))
@@ -42,14 +41,12 @@
       selectable? (om/update! app :selected position))))
 
 (defn rewind! [app]
-  (let [prior-move (peek @history)
-        from (:from prior-move)
-        to (:to prior-move)
-        piece (:piece prior-move)
-        captured (:captured prior-move)]
-    (when prior-move
-      (om/transact! app :squares #(merge % {from piece to captured}))
-      (swap! history pop))))
+  (when-let [undone-move (.undo game)]
+    (let [move (-> undone-move js->clj strings-to-keywords)
+          from (:from move)
+          to (:to move)
+          piece {:type (:piece move) :color (:color move)}]
+      (om/transact! app :squares #(merge % {from piece to nil})))))
 
 (defn square [{:keys [position type color selected targetable] :as piece} owner]
   (reify
@@ -60,7 +57,7 @@
                           selected (conj "selected"))]
         (dom/td #js {:onClick #(put! select-chan [piece position])
                      :className  (apply str (interpose " " class-names))}
-                (dom/a nil (b/icons #{type color})))))))
+                (dom/a nil (b/icons {:type type :color color})))))))
 
 (defn build-squares [app select-chan]
   (let [board (:squares app)

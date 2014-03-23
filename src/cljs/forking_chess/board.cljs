@@ -4,16 +4,23 @@
 
 (enable-console-print!)
 
-(def base-column {"a" :R "b" :N "c" :B "d" :Q "e" :K "f" :B "g" :N "h" :R})
+(def base-column {"a" "r"
+                  "b" "n"
+                  "c" "b"
+                  "d" "q"
+                  "e" "k"
+                  "f" "b"
+                  "g" "n"
+                  "h" "r"})
 
 (def initial-placements
   (into {}
         (for [row [1 2 7 8]
               column (map str (seq "abcdefgh"))
-              :let [color (if (< row 5) "white" "black")
+              :let [color (if (< row 5) "w" "b")
                     type (if (or (= 1 row)
                                  (= 8 row))
-                           (base-column column) :P)]]
+                           (base-column column) "p")]]
           [(str column row) {:color color :type type}])))
 
 (defn initial-placement [column row]
@@ -31,15 +38,15 @@
           [position value])))
 
 (def icons
-  {#{"white" :K} \♔
-   #{"white" :Q} \♕
-   #{"white" :R} \♖
-   #{"white" :B} \♗
-   #{"white" :N} \♘
-   #{"white" :P} \♙
-   #{"black" :K} \♚
-   #{"black" :Q} \♛
-   #{"black" :R} \♜
-   #{"black" :B} \♝
-   #{"black" :N} \♞
-   #{"black" :P} \♟})
+  {{:color "w" :type "k"} \♔
+   {:color "w" :type "q"} \♕
+   {:color "w" :type "r"} \♖
+   {:color "w" :type "b"} \♗
+   {:color "w" :type "n"} \♘
+   {:color "w" :type "p"} \♙
+   {:color "b" :type "k"} \♚
+   {:color "b" :type "q"} \♛
+   {:color "b" :type "r"} \♜
+   {:color "b" :type "b"} \♝
+   {:color "b" :type "n"} \♞
+   {:color "b" :type "p"} \♟})
