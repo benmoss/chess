@@ -12,13 +12,22 @@
 
 (def app-state (atom {:squares b/squares}))
 (def history (atom '()))
+(def game (new js/Chess))
+(set! (.-game js/window) game)
+
+(defn moves-for-square [square]
+  (let [opts (if square #js{:verbose true :square square} #js{:verbose true})
+        moves (js->clj (.moves game opts))]
+    (map #(into {} (for [[k v] %] [(keyword k) v])) moves)))
 
 (defn move-piece! [from to app]
   (let [board (:squares @app)
         piece (get board from)
         captured (get board to)
-        moves (p/moves piece from board @history)]
-    (when (moves to)
+        moves (moves-for-square from)
+        move (some #(when (= to (:to %)) %) moves)]
+    (when move
+      (.move game (clj->js move))
       (swap! history conj {:from from :to to :piece piece :captured captured})
       (om/update! app :selected nil)
       (om/update! app [:squares from] nil)
@@ -58,7 +67,7 @@
         rows (partition 8 board)
         selected-square (:selected app)
         selected-piece (get board selected-square)
-        targets (p/moves selected-piece selected-square board @history)
+        targets (set (map :to (moves-for-square selected-square)))
         init (fn [[position piece]]
                (cond-> piece
                  true (assoc :position position) ; kludge

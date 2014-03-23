@@ -3,7 +3,9 @@
 /lib
 /classes
 /checkouts
-/resources/*/js
+/resources/private
+/resources/public/js/out
+/resources/public/js/forking_chess.js
 /out
 pom.xml
 *.jar
