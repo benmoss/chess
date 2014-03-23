@@ -34,11 +34,14 @@
 
 (defn update-board! [app piece position]
   (let [selected (:selected @app)
-        selectable? (get-in @app [:squares position])]
+        current-color (.turn game)
+        target-square (get-in @app [:squares position])
+        moving? (not= current-color (:color target-square))
+        switching-selection? (= current-color (:color target-square))]
     (om/update! app :selected nil)
     (cond
-      selected (move-piece! selected position app)
-      selectable? (om/update! app :selected position))))
+      moving? (move-piece! selected position app)
+      switching-selection? (om/update! app :selected position))))
 
 (defn rewind! [app]
   (when-let [undone-move (.undo game)]
